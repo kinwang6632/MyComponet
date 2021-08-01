@@ -7,7 +7,7 @@
       @input="change"
       @keydown="keydown"
     />
-    <p>{{ dateValue }}</p>
+    <input type="text" ref="input2" v-model="inputValue2" >
   </div>
 </template>
 
@@ -17,10 +17,14 @@ export default {
   data() {
     return {
       inputValue: "",
+      inputValue2:"",
       selectionStart: 0,
       selectionEnd: 0,
       isBack: false,
       isDel: false,
+      year : [' ',' ', ' ', ' '],
+      month : [' ', ' '],
+      day : [' ', ' '],
     };
   },
   methods: {
@@ -56,6 +60,8 @@ export default {
     },
   },
   computed: {
+    
+
     dateValue: {
       get() {
         //   let tmp = this.inputValue + "        "
@@ -116,6 +122,8 @@ export default {
     this.$refs.input.focus();
     this.$refs.input.selectionStart = 0;
     this.$refs.input.selectionEnd = 0;
+    this.inputValue2 = "   /  /  "
+    this.dateValue = "   /  /  "
   },
 };
 </script>
