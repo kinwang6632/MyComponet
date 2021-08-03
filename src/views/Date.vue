@@ -12,7 +12,7 @@
       ref="input2"
       v-model="inputValue2"
       @keydown="keydown2"
-      @keyup="keyup2"
+      @input="input"
     />
   </div>
 </template>
@@ -28,17 +28,22 @@ export default {
       selectionEnd: 0,
       isBack: false,
       isDel: false,
-      inputChangeData: {
+      inputData: {
         year: [" ", " ", " ", " "],
         month: [" ", " "],
         day: [" ", " "],
-        HH: [" ", " "],
-        mm: [" ", " "],
-        ss: [" ", " "],
+        HH: [],
+        mm: [],
+        ss: [],
+        StarPos: 0,
+        keyCode: 0,
+      },
+      inputChangeData: {
         keyCode: -1,
         SelectionStart: 0,
         SelectionEnd: 0,
         key: "",
+        forceChange: "",
       },
     };
   },
@@ -60,6 +65,35 @@ export default {
       this.isBack = false;
       this.isDel = false;
     },
+    input() {
+      this.$refs.input2.value =
+        this.inputData.year.toString().replace(/,/g, "") +
+        "/" +
+        this.inputData.month.toString().replace(/,/g, "") +
+        "/" +
+        this.inputData.day.toString().replace(/,/g, "");
+      if (this.inputData.keyCode != 8 && this.inputData.keyCode != 46) {
+        this.$refs.input2.setSelectionRange(
+          this.inputData.StarPos + 1,
+          this.inputData.StarPos + 1
+        );
+      } else {
+        this.$refs.input2.setSelectionRange(
+          this.inputData.StarPos,
+          this.inputData.StarPos
+        );
+      }
+      if (this.$refs.input2.selectionStart === 4) {
+        if (this.inputData.keyCode != 8 && this.inputData.keyCode != 46) {
+          this.$refs.input2.setSelectionRange(5, 5);
+        }
+      }
+      if (this.$refs.input2.selectionStart === 7) {
+        if (this.inputData.keyCode != 8 && this.inputData.keyCode != 46) {
+          this.$refs.input2.setSelectionRange(8, 8);
+        }
+      }
+    },
     keydown(e) {
       this.selectionStart = this.$refs.input.selectionStart;
       if (e.keyCode != 8 && e.keyCode != 46) {
@@ -77,7 +111,9 @@ export default {
       this.inputChangeData.SelectionStart = this.$refs.input2.selectionStart;
       this.inputChangeData.SelectionEnd = this.$refs.input2.selectionEnd;
       this.inputChangeData.keyCode = e.keyCode;
-      this.inputChangeData.key = e.key;      
+      this.inputChangeData.key = e.key;
+      this.inputChangeData.forceChange =
+        new Date().getSeconds() + "-" + new Date().getMilliseconds();
       //this.selectionStart2 = this.$refs.input2.selectionStart;
       //this.selectionEnd2 = this.$refs.input2.selectionEnd;
       //console.log(this.$refs.input2.selectionStart + ',' + this.$refs.input2.selectionEnd )
@@ -89,44 +125,141 @@ export default {
   watch: {
     inputChangeData: {
       handler(newValue) {
-        let StarPos = newValue.SelectionStart
-        let Char =  ' '        
-        if (StarPos <=3) {
-          switch (newValue.keyCode) {
-            case 8:
-              StarPos -=1;
-              Char =  ' '
+        let StarPos = newValue.SelectionStart;
+        let EndPos = newValue.SelectionEnd;
+        let Char = " ";
+        let objname = "";
+        this.inputData.keyCode = newValue.keyCode;
+        if (StarPos <= 3) {
+          objname = "year";
+        }
+        if (StarPos >= 5 && StarPos <= 6) {
+          objname = "month";
+        }
+        if (StarPos >= 7 && StarPos <= 9) {
+          objname = "day";
+        }
+        if (newValue.keyCode === 8 || newValue.keyCode === 46) {
+          Char = " ";
+          if (newValue.keyCode === 8) {
+            if (StarPos === 4 || StarPos === 5) {
+              objname = "year";
+              if (StarPos == 5) {
+                StarPos -= 1;
+              }
+            }
+            if (StarPos === 8 || StarPos === 7) {
+              objname = "month";
+              if (StarPos === 8) {
+                StarPos -= 1;
+              }
+            }
+            if (StarPos === 10) {
+              objname = "day";
+            }
+            StarPos -= 1;
+          }
+        } else {
+          Char = newValue.key.toString().replace(/[^0-9]/g, "")[0];
+        }
+        this.inputData.StarPos = StarPos;
+        let currentPos = StarPos;
+        if (objname != "") {
+          switch (objname.toUpperCase()) {
+            case "month".toUpperCase():
+              currentPos -= 5;
               break;
-            case 46:
-              Char = ' ';
+            case "day".toUpperCase():
+              currentPos -= 8;
               break;
             default:
-              Char = newValue.key
               break;
-            
           }
-        }
-          Char = Char.replace(/[^0-9]/g," ")
-              console.log('Char:' + Char)              
-              this.inputChangeData.year[StarPos]= Char
-              
-        //this.inputValue2 = this.inputChangeData.year.toString().replace(/,/g,"") + '/'
-        /*
-        if (startPos <= 3) {
-          if (newValue.keyCode != 8 && newValue.keyCode != 46) {
-            char = newValue.key;
+          if (Char != undefined) {
+            this.inputData[objname][currentPos] = Char;
           } else {
-            if (newValue.keyCode === 8) {
-              startPos -=1
+            this.inputData.StarPos -= 1;
+          }
+          if (newValue.keyCode === 46 ) {
+            let tmp =[ ...this.inputData[objname]]
+            for(let i=currentPos;i<=this.inputData[objname].length-1;i++){
+              if(i<this.inputData[objname].length-1) {
+                tmp[i] = this.inputData[objname][i+1]
+              } else{
+                tmp[this.inputData[objname].length-1] = " "
+              }
+              
             }
-          }          
-          year[startPos] = char;
+            this.inputData[objname] = tmp
+          }
+          if (EndPos>StarPos) {
+
+            for(let i=1;i<EndPos-StarPos;i++){                                      
+              if(StarPos<=4) {   
+                console.log(EndPos-StarPos)
+                this.inputData.year[StarPos+i] = " "
+                // if (i===StarPos) {
+                //   if(Char != undefined) {
+                //     this.inputData.year[StarPos] = Char
+                //   }  
+                // }else{
+                //   if (i<=this.inputData.year.length-1 && i>StarPos) {
+                //     this.inputData.year[i] = " "
+                //   }
+                // }           
+                
+              }
+            }
+          }
+          
+          //if (newValue.keyCode === 32) {this.inputData.StarPos -=1}
         }
-        
-       // this.inputValue2 = year.toString().replace(/,/g,'') + '/' */
-        
+        /*
+        console.log(objname);
+        objname = "year";
+        if (StarPos <= 4) {
+          objname = "year";
+          switch (newValue.keyCode) {
+            case 8:
+              StarPos -= 1;
+              Char = " ";
+              break;
+            case 46:
+              Char = " ";
+              break;
+            default:
+              if (StarPos != 4) {
+                Char = newValue.key.toString().replace(/[^0-9]/g, "")[0];
+              } else {
+                Char = "";
+              }
+
+              break;
+          }
+          //Char = Char.replace(/[^0-9]/g," ").toString()[0]
+          this.inputData.StarPos = StarPos;
+          if (Char != "" && Char != undefined) {
+            if (StarPos < 4) {
+              this.inputData[objname][StarPos] = Char;
+            }
+
+            if (newValue.keyCode === 8 || newValue.keyCode === 46) {
+              for (let i = StarPos; i < 4; i++) {
+                if (i == 3) {
+                  this.inputData[objname][3] = " ";
+                } else {
+                  this.inputData[objname][i] = this.inputData[objname][i + 1];
+                }
+              }
+            }
+
+            for (let i = 0; i < EndPos - StarPos - 1; i++) {
+              this.inputData[objname][StarPos + i + 1] = " ";
+            }
+          }
+        }*/
       },
-      deep:true,
+      deep: true,
     },
   },
   computed: {
@@ -148,7 +281,7 @@ export default {
           //console.log(this.$refs.input.selectionStart)
         }
         if (this.isBack) {
-//          console.log(this.$refs.input.selectionStart);
+          //          console.log(this.$refs.input.selectionStart);
           switch (this.$refs.input.selectionStart) {
             case 8:
               value =
