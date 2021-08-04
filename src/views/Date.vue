@@ -114,9 +114,7 @@ export default {
       this.inputChangeData.key = e.key;
       this.inputChangeData.forceChange =
         new Date().getSeconds() + "-" + new Date().getMilliseconds();
-      //this.selectionStart2 = this.$refs.input2.selectionStart;
-      //this.selectionEnd2 = this.$refs.input2.selectionEnd;
-      //console.log(this.$refs.input2.selectionStart + ',' + this.$refs.input2.selectionEnd )
+     
     },
     keyup2() {
       //this.selectionRange = [this.$refs.input2.selectionStart,this.$refs.input2.selectionEnd,e.keyCode,this.inputValue2]
@@ -127,6 +125,8 @@ export default {
       handler(newValue) {
         let StarPos = newValue.SelectionStart;
         let EndPos = newValue.SelectionEnd;
+        let realStarpos = StarPos;
+        let realEndPos = EndPos;
         let Char = " ";
         let objname = "";
         this.inputData.keyCode = newValue.keyCode;
@@ -176,7 +176,7 @@ export default {
               break;
           }
           if (Char != undefined) {
-            this.inputData[objname][currentPos] = Char;
+            this.inputData[objname][currentPos] = Char;            
           } else {
             this.inputData.StarPos -= 1;
           }
@@ -192,82 +192,54 @@ export default {
             }
             this.inputData[objname] = tmp
           }
-          if (EndPos>StarPos) {
-
-            for(let i=1;i<EndPos-StarPos;i++){                                      
-              if(StarPos<=4) {   
-                console.log(EndPos-StarPos)
-                this.inputData.year[StarPos+i] = " "
-                // if (i===StarPos) {
-                //   if(Char != undefined) {
-                //     this.inputData.year[StarPos] = Char
-                //   }  
-                // }else{
-                //   if (i<=this.inputData.year.length-1 && i>StarPos) {
-                //     this.inputData.year[i] = " "
-                //   }
-                // }           
-                
-              }
+          if (realEndPos>realStarpos) {
+            
+            if (Char === undefined || Char === "" ) {this.inputData[objname][currentPos] = " "}            
+            for(let i = realStarpos;i<11;i++){
+                if(i<=(realEndPos-realStarpos)) {
+                  if (i<=4 ) {
+                    if ((i+1) <= this.inputData.year.length-1) {
+                      
+                      this.inputData.year[i+1] = " "
+                    }
+                  }
+                  if (i>5 && i<8) {                    
+                    if((i-5)<=this.inputData.month.length) {
+                      this.inputData.month[i-6] = " "
+                    }
+                  }
+                  if (i>8 && i<11) {                    
+                    if((i-5-3)<=this.inputData.day.length) {
+                      this.inputData.day[i-9] = " "
+                    }
+                  }
+                }
             }
+
+
+
+            // for(let i=1;i<realEndPos-realStarpos;i++){              
+            //   if (i<4) {
+            //     this.inputData.year[currentPos+i] = " "
+            //   } else {
+            //     if (i>4 && i<7) {
+            //       this.inputData.month[i-5] = " "
+            //     }
+            //   }
+              
+            // }
           }
           
-          //if (newValue.keyCode === 32) {this.inputData.StarPos -=1}
+          
         }
-        /*
-        console.log(objname);
-        objname = "year";
-        if (StarPos <= 4) {
-          objname = "year";
-          switch (newValue.keyCode) {
-            case 8:
-              StarPos -= 1;
-              Char = " ";
-              break;
-            case 46:
-              Char = " ";
-              break;
-            default:
-              if (StarPos != 4) {
-                Char = newValue.key.toString().replace(/[^0-9]/g, "")[0];
-              } else {
-                Char = "";
-              }
-
-              break;
-          }
-          //Char = Char.replace(/[^0-9]/g," ").toString()[0]
-          this.inputData.StarPos = StarPos;
-          if (Char != "" && Char != undefined) {
-            if (StarPos < 4) {
-              this.inputData[objname][StarPos] = Char;
-            }
-
-            if (newValue.keyCode === 8 || newValue.keyCode === 46) {
-              for (let i = StarPos; i < 4; i++) {
-                if (i == 3) {
-                  this.inputData[objname][3] = " ";
-                } else {
-                  this.inputData[objname][i] = this.inputData[objname][i + 1];
-                }
-              }
-            }
-
-            for (let i = 0; i < EndPos - StarPos - 1; i++) {
-              this.inputData[objname][StarPos + i + 1] = " ";
-            }
-          }
-        }*/
+        
       },
       deep: true,
     },
   },
   computed: {
     dateValue: {
-      get() {
-        //   let tmp = this.inputValue + "        "
-        //   tmp = tmp.substr(0,4) + '/' + tmp.substr(5,2) + '/' + tmp.substr(7,2)
-        //   this.inputValue = tmp
+      get() {        
         return this.inputValue;
       },
       set(value) {
