@@ -194,24 +194,29 @@ export default {
           }
           if (realEndPos>realStarpos) {
             
-            if (Char === undefined || Char === "" ) {this.inputData[objname][currentPos] = " "}            
-            for(let i = realStarpos;i<11;i++){
-                if(i<=(realEndPos-realStarpos)) {
+            if (Char === undefined || Char === "" ) {this.inputData[objname][currentPos] = " "}                        
+            for(let i = realStarpos;i<11;i++){                
+                for(let j=0;j<realEndPos-realStarpos;j++) {                           
                   if (i<=4 ) {
                     if ((i+1) <= this.inputData.year.length-1) {
-                      
-                      this.inputData.year[i+1] = " "
+                      if (realStarpos+j>=i) {
+                        this.inputData.year[i+1] = " "
+                      }
                     }
                   }
-                  if (i>5 && i<8) {                    
-                    if((i-5)<=this.inputData.month.length) {
-                      this.inputData.month[i-6] = " "
+                  if (i>5 && i<8  ) {                      
+                    if (realStarpos+j+1>=i) {                                            
+                      if((i-5)<=this.inputData.month.length) {                        
+                        this.inputData.month[i-6] = " "
+                      }
                     }
                   }
-                  if (i>8 && i<11) {                    
-                    if((i-5-3)<=this.inputData.day.length) {
-                      this.inputData.day[i-9] = " "
-                    }
+                  if (i>8 && i<11 && i<= realStarpos) { 
+                    if (realStarpos+j+1>=i){
+                      if((i-5-3)<=this.inputData.day.length) {
+                        this.inputData.day[i-9] = " "
+                      }
+                    }                   
                   }
                 }
             }

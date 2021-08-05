@@ -3,6 +3,7 @@
     <router-link to="/">Home</router-link> |
     <router-link to="/about">About</router-link>
     <router-link to="/date">Date</router-link>
+    <router-link to="/date2">Date2</router-link>
   </div>
   <router-view/>
 </template>
