@@ -1,5 +1,5 @@
 <template>
-  <input ref="input" type="text" @keydown="keydown" />
+  <input ref="input" type="text" @keydown="keydown" @input="inputChange" />
 </template>
 
 <script>
@@ -13,10 +13,7 @@ export default {
         hh: [" ", " "],
         mm: [" ", " "],
         ss: [" ", " "],
-        key: "",
-        keyCode: 0,
-        selectionStart: 0,
-        selectionEnd: 0,
+        currentPos :0,
       },
       inputKeyDown: {
         keyCode: 0,
@@ -31,21 +28,39 @@ export default {
   },
   methods: {
     keydown(e) {
+      let Star = 0;
+      let End = 0;
       this.inputKeyDown.key = e.key;
       this.inputKeyDown.keyCode = e.keyCode;
       this.inputKeyDown.selectionStart = this.$refs.input.selectionStart;
       this.inputKeyDown.selectionEnd = this.$refs.input.selectionEnd;
+      Star = this.inputKeyDown.selectionStart;
+      End = this.inputKeyDown.selectionEnd;
+      if (End > Star) {
+        End -=1;
+      }
+      if (e.keyCode === 8) {
+        if (Star === End) {
+          Star -= 1;                          
+        }
+      }      
+      this.inputKeyDown.selectionStart = Star
+      this.inputKeyDown.selectionEnd = End
       this.inputKeyDown.changeTime =
         new Date().getSeconds() + "-" + new Date().getMilliseconds();
+      this.chgMsk = this.getMask(Star, End);
+    },
+    inputChange() {
+      
+      this.$refs.input.value = this.inputData.year.toString().replace(/,/g,'') + 
+        '/' + this.inputData.month.toString().replace(/,/g,'')
 
-      this.chgMsk = this.getMask(
-        this.inputKeyDown.selectionStart,
-        this.inputKeyDown.selectionEnd
-      );
+      this.$refs.input.setSelectionRange(this.inputData.currentPos,this.inputData.currentPos)
     },
     getMask(Start, End) {
       let mask = [];
       let objName = "";
+      let searchName = "";
       let objArray;
       let year = Array.from(
         { length: 4 },
@@ -69,97 +84,89 @@ export default {
             case 0:
               objName = "year";
               objArray = year;
+              searchName = "yyyy";
               break;
             case 1:
               objName = "month";
               objArray = month;
+              searchName = "MM";
               break;
             case 2:
               objName = "day";
               objArray = day;
+              searchName = "dd";
               break;
             case 3:
               objName = "HH";
               objArray = HH;
+              searchName = "HH";
               break;
             case 4:
               objName = "mm";
               objArray = mm;
+              searchName = "mm";
               break;
             case 5:
               objName = "ss";
               objArray = ss;
+              searchName = "ss";
               break;
             default:
               break;
           }
 
           if (objArray.includes(i)) {
-            
-            let pos = mask.findIndex((v) => v.name === objName);                        
+            const p = this.mask.indexOf(searchName);
+            let pos = mask.findIndex((v) => v.name === objName);
             if (pos >= 0) {
-              mask[pos].End = i - Start;              
+              mask[pos].End = i - p;
             } else {
-              mask.push({ name: objName, Start: i - Start, End: i - Start });
-
+              mask.push({ name: objName, Start: i - p, End: i - p });
             }
           }
         }
-        /*
-        let a = [
-          { prop1: "abc", prop2: "qwe" },
-          { prop1: "bnmb", prop2: "yutu" },
-          { prop1: "zxvz", prop2: "qwrq" },
-        ];
-
-        let index = a.findIndex((x) => x.prop2 === "yutu");
-        console.log(index) */
-        //   let i = 100;
-        //   if (year.includes(i)) {
-        //     let pos = mask.findIndex((element) => (element.name = "year"));
-        //     if (pos >= 0) {
-        //       mask.push({ name: "year", Start: i - Start });
-        //     } else {
-        //       mask[pos].end = i - Start;
-        //     }
-        //   }
-        //   if (month.includes(i)) {
-        //     let pos = mask.findIndex((element) => (element.name = "month"));
-        //     if (pos >= 0) {
-        //       mask.push({ name: "month", Start: i - Start });
-        //     } else {
-        //       mask[pos].end = i - Start;
-        //     }
-        //   }
-        //   if (day.includes(i)) {
-        //     if (!mask.includes("day")) {
-        //       mask.push("day");
-        //     }
-        //   }
-        //   if (HH.includes(i)) {
-        //     if (!mask.includes("hh")) {
-        //       mask.push("hh");
-        //     }
-        //   }
-        //   if (mm.includes(i)) {
-        //     if (!mask.includes("mm")) {
-        //       mask.push("mm");
-        //     }
-        //   }
-        //   if (ss.includes(i)) {
-        //     if (!mask.includes("ss")) {
-        //       mask.push("ss");
-        //     }
-        //   }
       }
-      
+
       return mask;
     },
   },
   watch: {
     inputKeyDown: {
-      handler() {
-        
+      handler(v) {
+        let Char = " ";
+        Char = v.key.replace(/[^0-9]/g, "");
+        if (Char == undefined || Char === "") {
+          if (v.keyCode === 8 || v.keyCode === 46) {
+            Char = " ";
+          }
+        }
+        if (Char === '') {
+          
+          return
+        }        
+        if (this.chgMsk.length >= 1) {
+          for (let i = 0; i < this.chgMsk.length; i++) {
+            let name = this.chgMsk[i].name;
+            let start = this.chgMsk[i].Start;
+            if ( v.keyCode !=46 && v.keyCode != 8 )  {
+              console.log(v.keyCode)
+              this.inputData.currentPos = v.selectionStart+1
+            } else {
+              if (v.keyCode !=8) {
+                console.log(v.keyCode)
+                this.inputData.currentPos = v.selectionStart-1
+              }
+            }
+            if (this.inputData.currentPos < 0 ) {this.inputData.currentPos = 0}            
+            let end = this.chgMsk[i].End;            
+            for (let j = start; j <= end; j++) {
+              this.inputData[name][j] = Char;              
+              Char = " ";              
+            }
+          }
+        }
+        // this.$refs.input.value = this.inputData['year'].toString().replace(/,/g,'') + '/' +
+        //       this.inputData['month'].toString().replace(/,/g,'').toString()
       },
       deep: true,
     },
