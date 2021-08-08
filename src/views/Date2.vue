@@ -6,6 +6,7 @@
 export default {
   data() {
     return {
+      inputValue: "",
       inputData: {
         year: [" ", " ", " ", " "],
         month: [" ", " "],
@@ -13,8 +14,9 @@ export default {
         hh: [" ", " "],
         mm: [" ", " "],
         ss: [" ", " "],
-        currentPos :0,
+        currentPos: 0,
       },
+      specialCharAry: [],
       inputKeyDown: {
         keyCode: 0,
         key: "",
@@ -22,6 +24,7 @@ export default {
         selectionEnd: 0,
         changeTime: "",
       },
+      //mask: "yyyy/MM/dd HH:mm:ss",
       mask: "yyyy/MM/dd HH:mm:ss",
       chgMsk: [],
     };
@@ -34,34 +37,78 @@ export default {
       this.inputKeyDown.keyCode = e.keyCode;
       this.inputKeyDown.selectionStart = this.$refs.input.selectionStart;
       this.inputKeyDown.selectionEnd = this.$refs.input.selectionEnd;
+
       Star = this.inputKeyDown.selectionStart;
       End = this.inputKeyDown.selectionEnd;
       if (End > Star) {
-        End -=1;
+        End -= 1;
       }
-      if (e.keyCode === 8) {
-        if (Star === End) {
-          Star -= 1;                          
-        }
-      }      
-      this.inputKeyDown.selectionStart = Star
-      this.inputKeyDown.selectionEnd = End
+
+      if (Star < 0) {
+        Star = 0;
+      }
+      if (End < 0) {
+        End = 0;
+      }
+      this.inputKeyDown.selectionStart = Star;
+      this.inputKeyDown.selectionEnd = End;
       this.inputKeyDown.changeTime =
         new Date().getSeconds() + "-" + new Date().getMilliseconds();
-      this.chgMsk = this.getMask(Star, End);
+      this.chgMsk = this.getMask(Star, End, e.keyCode);
     },
     inputChange() {
-      
-      this.$refs.input.value = this.inputData.year.toString().replace(/,/g,'') + 
-        '/' + this.inputData.month.toString().replace(/,/g,'')
+      //yyyy/MM/dd HH:mm:ss
+      let val = this.mask;
+      if (val.indexOf("yyyy") >= 0) {
+        val = val.replace(
+          /yyyy/g,
+          this.inputData.year.toString().replace(/,/g, "")
+        );
+      }
+      if (val.indexOf("MM") >= 0) {
+        val = val.replace(
+          /MM/g,
+          this.inputData.month.toString().replace(/,/g, "")
+        );
+      }
+      if (val.indexOf("dd") >= 0) {
+        val = val.replace(
+          /dd/g,
+          this.inputData.day.toString().replace(/,/g, "")
+        );
+      }
+      if (val.indexOf("HH") >= 0) {
+        val = val.replace(
+          /HH/g,
+          this.inputData.hh.toString().replace(/,/g, "")
+        );
+      }
+      if (val.indexOf("mm") >= 0) {
+        val = val.replace(
+          /mm/g,
+          this.inputData.mm.toString().replace(/,/g, "")
+        );
+      }
+      if (val.indexOf("ss") >= 0) {
+        val = val.replace(
+          /ss/g,
+          this.inputData.ss.toString().replace(/,/g, "")
+        );
+      }
 
-      this.$refs.input.setSelectionRange(this.inputData.currentPos,this.inputData.currentPos)
+      this.$refs.input.value = val;
+
+      this.$refs.input.setSelectionRange(
+        this.inputData.currentPos,
+        this.inputData.currentPos
+      );
     },
-    getMask(Start, End) {
+    getMask(Start, End, keyCode) {
       let mask = [];
       let objName = "";
       let searchName = "";
       let objArray;
+
       let year = Array.from(
         { length: 4 },
         (_, i) => this.mask.indexOf("yyyy") + i
@@ -77,6 +124,56 @@ export default {
       let HH = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("HH") + i);
       let mm = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("mm") + i);
       let ss = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("ss") + i);
+      let tmpMask = this.mask;
+      if (keyCode === 8) {
+        if (Start === End) {
+          Start -= 1;
+          End = Start;
+        }
+      }
+
+      for (let i = 0; i <= 4; i++) {
+        let specialChar = "/";
+        if (i === 2) {
+          specialChar = " ";
+        }
+        if (i === 3 || i === 4) {
+          specialChar = ":";
+        }
+
+        let specialCharPos = tmpMask.indexOf(specialChar);
+
+        switch (specialChar) {
+          case "/":
+            tmpMask = tmpMask.replace(/\//, "X");
+            break;
+          case " ":
+            tmpMask = tmpMask.replace(/ /, "X");
+            break;
+          default:
+            tmpMask = tmpMask.replace(/:/, "X");
+            break;
+        }
+        if (Start === specialCharPos && Start != 0) {
+          if (keyCode === 8) {
+            if (Start === End) {
+              Start -= 1;
+              End = Start;
+            }
+          }
+        }
+        if (Start === specialCharPos && keyCode != 8) {
+          Start += 1;
+          End = Start;
+        }
+      }
+
+      if (Start < 0) {
+        Start = 0;
+      }
+      if (End < 0) {
+        End = 0;
+      }
 
       for (let i = Start; i <= End; i++) {
         for (let j = 0; j <= 5; j++) {
@@ -97,7 +194,7 @@ export default {
               searchName = "dd";
               break;
             case 3:
-              objName = "HH";
+              objName = "hh";
               objArray = HH;
               searchName = "HH";
               break;
@@ -117,16 +214,22 @@ export default {
 
           if (objArray.includes(i)) {
             const p = this.mask.indexOf(searchName);
+
             let pos = mask.findIndex((v) => v.name === objName);
+
             if (pos >= 0) {
               mask[pos].End = i - p;
             } else {
-              mask.push({ name: objName, Start: i - p, End: i - p });
+              try {
+                mask.push({ name: objName, Start: i - p, End: i - p });
+              } catch (e) {
+                console.log(e);
+              }
             }
           }
         }
       }
-
+      this.inputData.currentPos = Start;
       return mask;
     },
   },
@@ -140,38 +243,98 @@ export default {
             Char = " ";
           }
         }
-        if (Char === '') {
-          
-          return
-        }        
+
+        if (Char === "") {
+          return;
+        }
+
         if (this.chgMsk.length >= 1) {
           for (let i = 0; i < this.chgMsk.length; i++) {
             let name = this.chgMsk[i].name;
             let start = this.chgMsk[i].Start;
-            if ( v.keyCode !=46 && v.keyCode != 8 )  {
-              console.log(v.keyCode)
-              this.inputData.currentPos = v.selectionStart+1
+            if (v.keyCode != 46 && v.keyCode != 8) {
+              this.inputData.currentPos = v.selectionStart + 1;
+              if (this.specialCharAry.includes(this.inputData.currentPos)) {
+                this.inputData.currentPos += 1;
+              }
             } else {
-              if (v.keyCode !=8) {
-                console.log(v.keyCode)
-                this.inputData.currentPos = v.selectionStart-1
+              if (v.keyCode != 8 && v.keyCode != 46) {
+                this.inputData.currentPos = v.selectionStart - 1;
               }
             }
-            if (this.inputData.currentPos < 0 ) {this.inputData.currentPos = 0}            
-            let end = this.chgMsk[i].End;            
+            if (this.inputData.currentPos < 0) {
+              this.inputData.currentPos = 0;
+            }
+            let end = this.chgMsk[i].End;
             for (let j = start; j <= end; j++) {
-              this.inputData[name][j] = Char;              
-              Char = " ";              
+              this.inputData[name][j] = Char;
+              Char = " ";
             }
           }
+          if (v.keyCode === 46 && this.chgMsk.length >0) {    
+            let name = this.chgMsk[0].name        
+            let Start = this.chgMsk[0].Start
+            let End = this.chgMsk[0].End
+            let o = Array.from(this.inputData[name])
+            for (let i = Start ;i<=o.length;i++){
+              if (i+1 <= o.length) {
+                
+                if (i<=End) {
+                  this.inputData[name][i] = o[i+1]
+                } else {
+                  this.inputData[name][i]= " "
+                }
+              }
+            }
+            
+          }
         }
-        // this.$refs.input.value = this.inputData['year'].toString().replace(/,/g,'') + '/' +
-        //       this.inputData['month'].toString().replace(/,/g,'').toString()
       },
       deep: true,
     },
   },
   mounted() {
+    this.inputValue = this.mask;
+    this.inputValue = this.inputValue.replace(/y/g, " ");
+    this.inputValue = this.inputValue.replace(/m/g, " ");
+    this.inputValue = this.inputValue.replace(/M/g, " ");
+    this.inputValue = this.inputValue.replace(/d/g, " ");
+    this.inputValue = this.inputValue.replace(/H/g, " ");
+    this.inputValue = this.inputValue.replace(/s/g, " ");
+    this.$refs.input.value = this.mask;
+    this.$refs.input.value = this.$refs.input.value.replace(/y/g, " ");
+    this.$refs.input.value = this.$refs.input.value.replace(/M/g, " ");
+    this.$refs.input.value = this.$refs.input.value.replace(/m/g, " ");
+    this.$refs.input.value = this.$refs.input.value.replace(/s/g, " ");
+    this.$refs.input.value = this.$refs.input.value.replace(/H/g, " ");
+    this.$refs.input.value = this.$refs.input.value.replace(/d/g, " ");
+    let tmp = this.mask;
+    let specialChar = "";
+    for (let i = 0; i <= 4; i++) {
+      specialChar = "/";
+      if (i === 2) {
+        specialChar = " ";
+      }
+      if (i === 3 || i === 4) {
+        specialChar = ":";
+      }
+      this.specialCharAry.push(tmp.indexOf(specialChar));
+      switch (specialChar) {
+        case "/":
+          tmp = tmp.replace(/\//, "X");
+          break;
+        case " ":
+          tmp = tmp.replace(/ /, "X");
+          break;
+        case ":":
+          tmp = tmp.replace(/:/, "X");
+          break;
+        default:
+          break;
+      }
+    }
+
+    this.$refs.input.selectionStart = 0;
     this.$refs.input.focus();
   },
 };
