@@ -24,13 +24,15 @@ export default {
         selectionEnd: 0,
         changeTime: "",
       },
-      //mask: "yyyy/MM/dd HH:mm:ss",
-      mask: "yyyy/MM/dd HH:mm:ss",
+      mask: "yyyy/MM/dd",
       chgMsk: [],
     };
   },
   methods: {
+    
     keydown(e) {
+      
+
       let Star = 0;
       let End = 0;
       this.inputKeyDown.key = e.key;
@@ -111,19 +113,19 @@ export default {
 
       let year = Array.from(
         { length: 4 },
-        (_, i) => this.mask.indexOf("yyyy") + i
+        (_, i) => this.mask.indexOf("yyyy") >=0 ? this.mask.indexOf("yyyy") + i:-1
       );
       let month = Array.from(
         { length: 2 },
-        (_, i) => this.mask.indexOf("MM") + i
+        (_, i) => this.mask.indexOf("MM") >= 0 ? this.mask.indexOf("MM") + i:-1
       );
       let day = Array.from(
         { length: 2 },
-        (_, i) => this.mask.indexOf("dd") + i
+        (_, i) => this.mask.indexOf("dd")>= 0 ? this.mask.indexOf("dd") + i:-1
       );
-      let HH = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("HH") + i);
-      let mm = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("mm") + i);
-      let ss = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("ss") + i);
+      let HH = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("HH") >=0 ? this.mask.indexOf("HH") + i:-1);
+      let mm = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("mm") >=0 ? this.mask.indexOf("mm") + i:-1);
+      let ss = Array.from({ length: 2 }, (_, i) => this.mask.indexOf("ss") >=0 ? this.mask.indexOf("ss") + i:-1);
       let tmpMask = this.mask;
       if (keyCode === 8) {
         if (Start === End) {
@@ -162,7 +164,7 @@ export default {
             }
           }
         }
-        if (Start === specialCharPos && keyCode != 8) {
+        if (Start === specialCharPos && keyCode != 8 && keyCode != 46) {
           Start += 1;
           End = Start;
         }
@@ -211,7 +213,7 @@ export default {
             default:
               break;
           }
-
+          
           if (objArray.includes(i)) {
             const p = this.mask.indexOf(searchName);
 
@@ -230,6 +232,7 @@ export default {
         }
       }
       this.inputData.currentPos = Start;
+      
       return mask;
     },
   },
@@ -237,6 +240,7 @@ export default {
     inputKeyDown: {
       handler(v) {
         let Char = " ";
+
         Char = v.key.replace(/[^0-9]/g, "");
         if (Char == undefined || Char === "") {
           if (v.keyCode === 8 || v.keyCode === 46) {
@@ -271,21 +275,41 @@ export default {
               Char = " ";
             }
           }
-          if (v.keyCode === 46 && this.chgMsk.length >0) {    
-            let name = this.chgMsk[0].name        
-            let Start = this.chgMsk[0].Start
-            let End = this.chgMsk[0].End
-            let o = Array.from(this.inputData[name])
-            for (let i = Start ;i<=o.length;i++){
-              if (i+1 <= o.length) {
-                
-                if (i<=End) {
-                  this.inputData[name][i] = o[i+1]
-                } else {
-                  this.inputData[name][i]= " "
-                }
+          if (v.selectionEnd - v.selectionStart > 0 && v.keyCode !=46 ) {
+            let name = this.chgMsk[0].name;
+            let o = Array.from(this.inputData[name]);
+            let aryPreserve = o.slice(v.selectionEnd + 1,o.length)
+            let Start = this.chgMsk[0].Start;
+            let j = 0
+            
+            for(let i = Start+1;i<o.length;i++){              
+              if (j<=aryPreserve.length-1) {
+                this.inputData[name][i] = aryPreserve[j]
+              } else {
+                this.inputData[name][i] = " "
               }
+              j+=1
             }
+          }
+          
+          /* processing delete button */
+          if (v.keyCode === 46 && this.chgMsk.length > 0  )  {            
+            let name = this.chgMsk[0].name;
+            let o = Array.from(this.inputData[name]);
+            let Start = this.chgMsk[0].Start;
+            let End = this.chgMsk[0].End;
+            let aryPreserve = o.slice(End+1,o.length)
+            let j = Start;
+              
+            for (let i = 0 ;i<aryPreserve.length;i++) {                
+                this.inputData[name][j] = aryPreserve[i]
+                j+=1                
+            }
+            
+            for (let i=j;i<=o.length-1 ;i++) {
+              this.inputData[name][i] = " "
+            }
+           
             
           }
         }
