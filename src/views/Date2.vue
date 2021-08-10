@@ -267,6 +267,9 @@ export default {
                   return;
                 }
               } else {
+                if (+this.inputData[this.chgMsk[0].name][0] === 0 && +Char === 0) {
+                  return ;
+                }
                 if (+this.inputData[this.chgMsk[0].name][0] > 0 && +Char > 2) {
                   return;
                 } else {
@@ -359,8 +362,7 @@ export default {
     // this.inputValue = this.inputValue.replace(/H/g, " ");
     // this.inputValue = this.inputValue.replace(/s/g, " ");
     
-    //this.mask = this.$attrs.inputMask ? this.$attrs.inputMask : 'yyyy/MM/dd'
-    console.log(this.$attrs.inputMask);
+    //this.mask = this.$attrs.inputMask ? this.$attrs.inputMask : 'yyyy/MM/dd'    
     this.mask = this.$attrs.inputMask ? this.$attrs.inputMask :'yyyy/MM/dd'
     
     //if (!this.$attrs.inputMask) {this.mask = "yyyy/MM/dd"}
