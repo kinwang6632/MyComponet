@@ -6,7 +6,8 @@
 export default {
   data() {
     return {
-      inputValue: "",
+      //inputValue: "",
+      props:['inputMask'],
       inputData: {
         year: [" ", " ", " ", " "],
         month: [" ", " "],
@@ -24,12 +25,14 @@ export default {
         selectionEnd: 0,
         changeTime: "",
       },
-      mask: "yyyy/MM/dd",
+      //mask: "yyyy/MM/dd",
+      mask:'',
       chgMsk: [],
     };
   },
   methods: {
     keydown(e) {
+      
       let Star = 0;
       let End = 0;
       this.inputKeyDown.key = e.key;
@@ -251,7 +254,7 @@ export default {
         if (Char === "") {
           return;
         }
-        if (v.keyCode != 8 && v.keyCode != 46) {
+        if (v.keyCode != 8 && v.keyCode != 46 && this.chgMsk.length > 0) {
           switch (this.chgMsk[0].name) {
             case "year":
               if (this.chgMsk[0].Start === 0 && Char === "0") {
@@ -274,9 +277,12 @@ export default {
               }
               break;
             case 'day':
+              if (this.mask.indexOf('yyyy') > 0){
+                console.log('have yyyy')
+              }
               break;
             default:
-              break;
+              break;  
           }
         }
 
@@ -345,13 +351,20 @@ export default {
     },
   },
   mounted() {
-    this.inputValue = this.mask;
-    this.inputValue = this.inputValue.replace(/y/g, " ");
-    this.inputValue = this.inputValue.replace(/m/g, " ");
-    this.inputValue = this.inputValue.replace(/M/g, " ");
-    this.inputValue = this.inputValue.replace(/d/g, " ");
-    this.inputValue = this.inputValue.replace(/H/g, " ");
-    this.inputValue = this.inputValue.replace(/s/g, " ");
+    // this.inputValue = this.mask;
+    // this.inputValue = this.inputValue.replace(/y/g, " ");
+    // this.inputValue = this.inputValue.replace(/m/g, " ");
+    // this.inputValue = this.inputValue.replace(/M/g, " ");
+    // this.inputValue = this.inputValue.replace(/d/g, " ");
+    // this.inputValue = this.inputValue.replace(/H/g, " ");
+    // this.inputValue = this.inputValue.replace(/s/g, " ");
+    
+    //this.mask = this.$attrs.inputMask ? this.$attrs.inputMask : 'yyyy/MM/dd'
+    console.log(this.$attrs.inputMask);
+    this.mask = this.$attrs.inputMask ? this.$attrs.inputMask :'yyyy/MM/dd'
+    
+    //if (!this.$attrs.inputMask) {this.mask = "yyyy/MM/dd"}
+    
     this.$refs.input.value = this.mask;
     this.$refs.input.value = this.$refs.input.value.replace(/y/g, " ");
     this.$refs.input.value = this.$refs.input.value.replace(/M/g, " ");

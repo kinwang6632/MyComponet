@@ -4,6 +4,7 @@
     <router-link to="/about">About</router-link>
     <router-link to="/date">Date</router-link>
     <router-link to="/date2">Date2</router-link>
+    <router-link to="/showdateexample">ShowDateExample</router-link>
   </div>
   <router-view/>
 </template>
